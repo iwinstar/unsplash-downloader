@@ -35,6 +35,13 @@ Spider pictures, and store metadata in local database.
 scrapy runspider UnsplashSpider.py
 ```
 
+or
+
+```bash
+./unsplash.sh s
+./unsplash.sh spider
+```
+
 #### Step 2: Download
 
 download pictures with 10 threads by default. 
@@ -43,4 +50,11 @@ It will modify local file's change time to picture's last modify time stored in 
 
 ```bash
 python UnsplashDownloader.py FULL_PATH_TO_STORE_PICTURES
+```
+
+or
+
+```bash
+./unsplash.sh d path
+./unsplash.sh download path
 ```
