@@ -5,6 +5,7 @@ source venv/bin/activate
 name=`basename $0`
 
 case $1 in
+
     s|spider)
         scrapy runspider UnsplashSpider.py
         ;;
@@ -21,4 +22,5 @@ case $1 in
         exit 1
         ;;
 esac
+
 exit 0
