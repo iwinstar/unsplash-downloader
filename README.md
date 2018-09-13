@@ -11,7 +11,7 @@ Unsplash provide API to access their database, but limited to 50 requests per ho
 
 > Notice: the follow commands should also run under this environment
 
-```sh
+```bash
 # download source code
 git clone https://github.com/iwinstar/unsplash-downloader.git
 cd unsplash-downloader
