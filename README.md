@@ -1,6 +1,6 @@
 # Unsplash Downloader
 
-> Until 2018.09.12, Total 80706 pictures, 584 GiB
+> Until 2018.09.12, Total spider 80706 pictures, 584 GiB
 
 ### Introduction
 I love pictures on Unsplash uploaded by photographers worldwide. They are so beautiful and professional. I want to download them to local disk as material library, so here we are.
