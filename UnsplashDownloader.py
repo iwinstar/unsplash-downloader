@@ -1,6 +1,6 @@
-# -*- author: steve.cmm
+# -*- author: iwinstar -*-
 # -*- encoding: utf-8 -*-
-# Usage: python UnsplashDownloader.py "pictures"
+# -*- datetime: 2018/09/10 08:10:08 -*-
 
 import sqlite3
 import urllib

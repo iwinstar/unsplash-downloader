@@ -1,8 +1,9 @@
 #!/bin/sh
 
-source venv/bin/activate
-
 name=`basename $0`
+
+cd $(cd `dirname $0`; pwd)
+source venv/bin/activate
 
 case $1 in
 
