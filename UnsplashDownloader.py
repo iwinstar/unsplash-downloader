@@ -58,21 +58,44 @@ class UnsplashDownloader:
 
 
 if __name__ == "__main__":
+
+    COLOR_BEGIN = '\033[93m'
+    COLOR_END = '\033[0m'
+
+    db_file = "database/picture.db"
+    cp_file = "checkpoint/download"
+
     # get params
     folder_path = sys.argv[1]
-    db_file = 'database/picture.db'
 
     if not os.path.exists(folder_path):
         os.mkdir(folder_path)
 
+    # read checkpoint
+    condition = None
+    with open(cp_file, 'r') as fr:
+        checkpoint = fr.read()
+        fr.close()
+
+    if checkpoint:
+        condition = "where created_at > '%s'" % checkpoint
+
     # get all picture urls
     conn = sqlite3.connect(db_file)
-    cursor = conn.execute("select created_at, file_name, url from picture order by created_at asc")
+    cursor = conn.execute("select created_at, file_name, url from picture %s order by created_at asc" % condition)
 
     pictures = []
     for picture in cursor:
         pictures.append((list(picture), None))
+        checkpoint = picture[0]
 
     # threads shouldn't be very large
     pd = UnsplashDownloader(pictures, folder_path, threads=10)
     pd.run()
+
+    # record checkpoint
+    with open(cp_file, 'w') as fw:
+        fw.write(checkpoint)
+        fw.close()
+
+    print "%sCheckpoint: %s, Download %s pictures%s" % (COLOR_BEGIN, checkpoint, len(pictures), COLOR_END)
