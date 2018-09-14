@@ -40,6 +40,12 @@ or
 ```bash
 ./unsplash.sh s
 ./unsplash.sh spider
+
+# or
+
+alias us="/Users/xxx/git/unsplash-downloader/unsplash.sh"
+us s
+us spider
 ```
 
 #### Step 2: Download
@@ -57,4 +63,10 @@ or
 ```bash
 ./unsplash.sh d path
 ./unsplash.sh download path
+
+# or
+
+alias us="/Users/xxx/git/unsplash-downloader/unsplash.sh"
+us d path
+us download path
 ```
