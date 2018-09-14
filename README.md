@@ -1,6 +1,6 @@
 # Unsplash Downloader
 
-![language](https://img.shields.io/badge/language-python/shell-orange.svg)
+![language](https://img.shields.io/badge/language-Python/Shell-orange.svg)
 ![repo size](https://img.shields.io/github/repo-size/badges/shields.svg)
 ![license](https://img.shields.io/hexpm/l/plug.svg) 
 ![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)
