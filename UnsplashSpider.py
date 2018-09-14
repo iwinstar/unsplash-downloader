@@ -123,8 +123,6 @@ class UnsplashSpider(scrapy.Spider):
         conn.close()
 
     def spider_closed(self, spider):
-        print '%s%s%s%s%s' % (self.COLOR_BEGIN, '='*26, ' Spider Result ', '='*26, self.COLOR_END)
-
         # record checkpoint
         for (page_index, page_item) in self.page_items.items():
             if 0 < page_item < self.page_size:
@@ -141,7 +139,8 @@ class UnsplashSpider(scrapy.Spider):
         conn = sqlite3.connect(self.db_file)
         cursor = conn.execute("select count(*) from picture")
         print "%sPage: %s -> %s, Checkpoint: %s, Total spider pictures: %s%s" % \
-              (self.COLOR_BEGIN, self.page_begin, self.page_end, self.check_point, cursor.fetchone()[0], self.COLOR_END)
+              (self.COLOR_BEGIN, self.page_begin, self.page_end,
+               self.check_point, cursor.fetchone()[0], self.COLOR_END)
 
         cursor.close()
         conn.close()

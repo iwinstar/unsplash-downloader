@@ -8,7 +8,7 @@ source venv/bin/activate
 case $1 in
 
     s|spider)
-        scrapy runspider UnsplashSpider.py
+        scrapy runspider UnsplashSpider.py -s LOG_ENABLED=False
         ;;
     d|download)
         if [ $# != 2 ]; then
