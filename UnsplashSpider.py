@@ -19,6 +19,9 @@ sys.setdefaultencoding('utf8')
 class UnsplashSpider(scrapy.Spider):
     name = "UnsplashSpider"
 
+    COLOR_BEGIN = '\033[93m'
+    COLOR_END = '\033[0m'
+
     db_file = "database/picture.db"
     cp_file = "checkpoint/spider"
 
@@ -35,7 +38,7 @@ class UnsplashSpider(scrapy.Spider):
         self.initial_page()
         self.initial_table()
 
-        dispatcher.connect(self.closed, signals.spider_closed)
+        dispatcher.connect(self.spider_closed, signals.spider_closed)
 
     def start_requests(self):
 
@@ -119,7 +122,8 @@ class UnsplashSpider(scrapy.Spider):
                      "url varchar(255));")
         conn.close()
 
-    def closed(self, spider):
+    def spider_closed(self, spider):
+        print '%s%s%s%s%s' % (self.COLOR_BEGIN, '='*26, ' Spider Result ', '='*26, self.COLOR_END)
 
         # record checkpoint
         for (page_index, page_item) in self.page_items.items():
@@ -136,8 +140,8 @@ class UnsplashSpider(scrapy.Spider):
         # query statistics
         conn = sqlite3.connect(self.db_file)
         cursor = conn.execute("select count(*) from picture")
-        print "Page: %s -> %s, Checkpoint: %s, Total spider pictures: %s" % \
-              (self.page_begin, self.page_end, self.check_point, cursor.fetchone()[0])
+        print "%sPage: %s -> %s, Checkpoint: %s, Total spider pictures: %s%s" % \
+              (self.COLOR_BEGIN, self.page_begin, self.page_end, self.check_point, cursor.fetchone()[0], self.COLOR_END)
 
         cursor.close()
         conn.close()
