@@ -27,7 +27,10 @@ class UnsplashSpider(scrapy.Spider):
 
         self.page_begin = 1
         self.page_end = 2700
+        self.page_size = 30
         self.page_step = 30
+        self.page_items = {}
+        self.check_point = None
 
         self.initial_page()
         self.initial_table()
@@ -39,31 +42,25 @@ class UnsplashSpider(scrapy.Spider):
         # use official client_id inside Chrome plugin
         url_pre = "https://api.unsplash.com/photos/?client_id="
         client_id = "fa60305aa82e74134cabc7093ef54c8e2c370c47e73152f72371c828daedfcd7"
-        url_page, url_page_size = "&page=", "&per_page=30"
+        url_page, url_page_size = "&page=", "&per_page=" + str(self.page_size)
 
         conn = sqlite3.connect(self.db_file)
         semaphore = threading.Semaphore(1)
 
         # spider pictures and store them in database
-        for i in range(self.page_begin, self.page_end):
-            yield scrapy.Request(url=url_pre + client_id + url_page + str(i) + url_page_size,
-                                 callback=lambda response, conn=conn, semaphore=semaphore, page=str(i):
+        for page_index in range(self.page_begin, self.page_end + 1):
+            yield scrapy.Request(url=url_pre + client_id + url_page + str(page_index) + url_page_size,
+                                 callback=lambda response, conn=conn, semaphore=semaphore, page=str(page_index):
                                  self.save_data(response, conn, semaphore, page))
 
     def parse(self, response):
         pass
 
-    def save_data(self, response, conn, semaphore, page):
+    def save_data(self, response, conn, semaphore, page_index):
         pictures = json.loads(response.body_as_unicode())
+        self.page_items[page_index] = len(pictures)
 
         if pictures:
-
-            # store checkpoint
-            if len(pictures) < 30:
-                with open(self.cp_file, 'w') as fw:
-                    fw.write(page)
-                    fw.close()
-
             for picture in pictures:
                 id_str = picture["id"]
                 created_at = datetime.datetime.strptime(picture["created_at"][0:19], '%Y-%m-%dT%H:%M:%S')
@@ -124,20 +121,23 @@ class UnsplashSpider(scrapy.Spider):
 
     def closed(self, spider):
 
-        # record end_page
-        with open(self.cp_file, 'r') as fr:
-            checkpoint = fr.read()
-            fr.close()
+        # record checkpoint
+        for (page_index, page_item) in self.page_items.items():
+            if 0 < page_item < self.page_size:
+                self.check_point = page_index
 
-            if checkpoint and int(checkpoint) == self.page_begin:
-                with open(self.cp_file, 'w') as fw:
-                    fw.write(str(self.page_end))
-                    fw.close()
+        if not self.check_point:
+            self.check_point = self.page_end
+
+        with open(self.cp_file, 'w') as fw:
+            fw.write(str(self.check_point))
+            fw.close()
 
         # query statistics
         conn = sqlite3.connect(self.db_file)
         cursor = conn.execute("select count(*) from picture")
-        print "Total spider pictures: " + str(cursor.fetchone()[0])
+        print "Page: %s -> %s, Checkpoint: %s, Total spider pictures: %s" % \
+              (self.page_begin, self.page_end, self.check_point, cursor.fetchone()[0])
 
         cursor.close()
         conn.close()
