@@ -98,4 +98,4 @@ if __name__ == "__main__":
         fw.write(checkpoint)
         fw.close()
 
-    print "%sCheckpoint: %s, Download %s pictures%s" % (COLOR_BEGIN, checkpoint, len(pictures), COLOR_END)
+    print "%sCheckpoint: %s, Total download pictures: %s%s" % (COLOR_BEGIN, checkpoint, len(pictures), COLOR_END)
