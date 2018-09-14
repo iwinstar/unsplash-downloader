@@ -1,5 +1,10 @@
 # Unsplash Downloader
 
+![language](https://img.shields.io/badge/language-python/shell-orange.svg)
+![repo size](https://img.shields.io/github/repo-size/badges/shields.svg)
+![license](https://img.shields.io/hexpm/l/plug.svg) 
+![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)
+
 > Until 2018.09.12, Total spider 80706 pictures, 584 GiB
 
 ### Introduction
