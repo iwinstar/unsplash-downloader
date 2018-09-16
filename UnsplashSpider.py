@@ -19,7 +19,8 @@ sys.setdefaultencoding('utf8')
 class UnsplashSpider(scrapy.Spider):
     name = "UnsplashSpider"
 
-    COLOR_BEGIN = '\033[93m'
+    COLOR_GREEN = '\033[92m'
+    COLOR_RED = '\033[91m'
     COLOR_END = '\033[0m'
 
     db_file = "database/picture.db"
@@ -53,8 +54,8 @@ class UnsplashSpider(scrapy.Spider):
         # spider pictures and store them in database
         for page_index in range(self.page_begin, self.page_end + 1):
             yield scrapy.Request(url=url_pre + client_id + url_page + str(page_index) + url_page_size,
-                                 callback=lambda response, conn=conn, semaphore=semaphore, page=str(page_index):
-                                 self.save_data(response, conn, semaphore, page))
+                                 callback=lambda response, conn=conn, semaphore=semaphore, page_index=page_index:
+                                 self.save_data(response, conn, semaphore, page_index))
 
     def parse(self, response):
         pass
@@ -62,6 +63,9 @@ class UnsplashSpider(scrapy.Spider):
     def save_data(self, response, conn, semaphore, page_index):
         pictures = json.loads(response.body_as_unicode())
         self.page_items[page_index] = len(pictures)
+
+        print "%sSpider page: %4d, pictures: %2d%s" % \
+              (self.COLOR_RED, page_index, len(pictures), self.COLOR_END)
 
         if pictures:
             for picture in pictures:
@@ -79,15 +83,9 @@ class UnsplashSpider(scrapy.Spider):
                 pre = pre.split('?')[0]
                 file_name = pre if pre.split(".")[-1] in ["jpg", "png"] else pre + ".jpg"
 
-                select_sql = "select count(*) from picture where id = '%s'" % id_str
-                cursor = conn.execute(select_sql)
-
-                if cursor.fetchone()[0]:
-                    sql = "update picture set likes = %s where id = '%s'" % (likes, id_str)
-                else:
-                    sql = 'insert into picture values ("%s", "%s", "%s", %s, %s, "%s", "%s", %s, "%s", "%s", "%s");' \
-                          % (id_str, created_at, updated_at, width, height, color,
-                             description, likes, user_name, file_name, url)
+                sql = 'insert into picture values ("%s", "%s", "%s", %s, %s, "%s", "%s", %s, "%s", "%s", "%s");' \
+                      % (id_str, created_at, updated_at, width, height, color,
+                         description, likes, user_name, file_name, url)
 
                 conn.execute(sql)
 
@@ -100,14 +98,14 @@ class UnsplashSpider(scrapy.Spider):
             checkpoint = fr.read()
             fr.close()
 
-            if checkpoint:
-                self.page_begin = int(checkpoint)
-                self.page_end = int(checkpoint) + self.page_step
+        if checkpoint:
+            self.page_end = int(checkpoint) + self.page_step
 
     def initial_table(self):
         conn = sqlite3.connect(self.db_file)
 
         # prepare database
+        conn.execute("drop table if exists picture")
         conn.execute("create table if not exists picture ("
                      "id varchar(255),"
                      "created_at datetime,"
@@ -120,6 +118,7 @@ class UnsplashSpider(scrapy.Spider):
                      "user_name varchar(255),"
                      "file_name varchar(255),"
                      "url varchar(255));")
+        conn.execute("vacuum")
         conn.close()
 
     def spider_closed(self, spider):
@@ -138,9 +137,10 @@ class UnsplashSpider(scrapy.Spider):
         # query statistics
         conn = sqlite3.connect(self.db_file)
         cursor = conn.execute("select count(*) from picture")
-        print "%sPage: %s -> %s, Checkpoint: %s, Total spider pictures: %s%s" % \
-              (self.COLOR_BEGIN, self.page_begin, self.page_end,
-               self.check_point, cursor.fetchone()[0], self.COLOR_END)
-
+        count = cursor.fetchone()[0]
         cursor.close()
         conn.close()
+
+        print "%sPage: %s -> %s, Checkpoint: %s, Total spider pictures: %s%s" % \
+              (self.COLOR_GREEN, self.page_begin, self.page_end,
+               self.check_point, count, self.COLOR_END)
