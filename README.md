@@ -26,9 +26,7 @@ virtualenv venv
 source venv/bin/activate
 
 # install dependency
-pip install scrapy
-pip install Pillow
-pip install threadpool
+pip install -r requirements.txt
 ```
 
 ### Usage
