@@ -28,30 +28,35 @@ class UnsplashDownloader:
         try:
             full_name = self.folder + '/' + file_name
 
+            # check local picture
             if os.path.exists(full_name):
-                print '%s exits.' % file_name
-            else:
-                # download file
-                print 'Downloading: %s' % file_name
+                local_file_size = int(os.path.getsize(full_name))
+                remote_file_size = int(urllib.urlopen(url).info()['Content-Length'])
 
-                urllib.urlretrieve(url, full_name)
+                if remote_file_size == local_file_size:
+                    print 'Downloaded %s' % file_name
+                    return
 
+            # download picture
+            print 'Downloading: %s' % file_name
+            urllib.urlretrieve(url, full_name)
+
+            try:
                 # initialize change_time to picture's upload_time
                 change_time = time.mktime(time.strptime(created_at, '%Y-%m-%d %H:%M:%S'))
 
                 # get picture's last modified time stored in exif
-                try:
-                    exif = Image.open(full_name)._getexif()
+                exif = Image.open(full_name)._getexif()
 
-                    if exif and exif.get(306):
-                        # python don't provide interface to change file's create_time under mac
-                        # so, here we just modify change_time, known as ctime
-                        # more introduction about exif format: http://www.exiv2.org/tags.html
-                        change_time = time.mktime(time.strptime(exif.get(306), '%Y:%m:%d %H:%M:%S'))
-                except Exception, e:
-                    print "%s exception %s" % (file_name, e)
+                if exif and exif.get(306):
+                    # python don't provide interface to change file's create_time under mac
+                    # so, here we just modify change_time, known as ctime
+                    # more introduction about exif format: http://www.exiv2.org/tags.html
+                    change_time = time.mktime(time.strptime(exif.get(306), '%Y:%m:%d %H:%M:%S'))
 
                 os.utime(full_name, (change_time, change_time))
+            except Exception, e:
+                print "%s exception %s" % (file_name, e)
         except urllib.ContentTooShortError:
             print 'Network Error, re-download:' + url
             self.downloader(created_at, file_name, url)
@@ -78,7 +83,7 @@ if __name__ == "__main__":
         fr.close()
 
     if checkpoint:
-        condition = "where created_at > '%s'" % checkpoint
+        condition = "where created_at >= '%s'" % checkpoint
 
     # get all picture urls
     conn = sqlite3.connect(db_file)
