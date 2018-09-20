@@ -29,6 +29,9 @@ class UnsplashSpider(scrapy.Spider):
     def __init__(self):
         super(UnsplashSpider, self).__init__()
 
+        self.time_begin = datetime.datetime.now()
+        self.time_end = None
+
         self.page_begin = 1
         self.page_end = 2700
         self.page_size = 30
@@ -141,6 +144,10 @@ class UnsplashSpider(scrapy.Spider):
         cursor.close()
         conn.close()
 
-        print "%sPage: %s -> %s, Checkpoint: %s, Total spider pictures: %s%s" % \
+        self.time_end = datetime.datetime.now()
+        seconds = (self.time_end - self.time_begin).total_seconds()
+        hms = "{:0>8}".format(datetime.timedelta(seconds=seconds))
+
+        print "%sPage: %s -> %s, Checkpoint: %s, Total spider pictures: %s, Total Time: %s%s" % \
               (self.COLOR_GREEN, self.page_begin, self.page_end,
-               self.check_point, count, self.COLOR_END)
+               self.check_point, count, hms, self.COLOR_END)

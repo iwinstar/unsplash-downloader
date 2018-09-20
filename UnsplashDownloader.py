@@ -7,6 +7,7 @@ import urllib
 import threadpool
 import os
 import time
+import datetime
 import sys
 from PIL import Image
 
@@ -70,6 +71,8 @@ if __name__ == "__main__":
     db_file = "database/picture.db"
     cp_file = "checkpoint/download"
 
+    time_begin = datetime.datetime.now()
+
     # get params
     folder_path = sys.argv[1]
 
@@ -103,4 +106,9 @@ if __name__ == "__main__":
         fw.write(checkpoint)
         fw.close()
 
-    print "%sCheckpoint: %s, Total download pictures: %s%s" % (COLOR_BEGIN, checkpoint, len(pictures), COLOR_END)
+    time_end = datetime.datetime.now()
+    seconds = (time_end - time_begin).total_seconds()
+    hms = "{:0>8}".format(datetime.timedelta(seconds=seconds))
+
+    print "%sCheckpoint: %s, Total download pictures: %s, Total time: %s%s" % \
+          (COLOR_BEGIN, checkpoint, len(pictures), hms, COLOR_END)
