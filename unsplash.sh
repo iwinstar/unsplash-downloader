@@ -3,7 +3,6 @@
 name=`basename $0`
 
 cd $(cd `dirname $0`; pwd)
-source venv/bin/activate
 
 case $1 in
 
@@ -16,7 +15,7 @@ case $1 in
             exit -1
         fi
 
-        python UnsplashDownloader.py "$2"
+        python3 UnsplashDownloader.py "$2"
         ;;
     *)
         echo "Usage: $name [s|spider|d|download]"

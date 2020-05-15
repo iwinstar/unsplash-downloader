@@ -7,16 +7,11 @@ import sqlite3
 import threading
 import datetime
 import json
-import sys
 
-from scrapy.xlib.pydispatch import dispatcher
 from scrapy import signals
+from scrapy import Spider
 
-reload(sys)
-sys.setdefaultencoding('utf8')
-
-
-class UnsplashSpider(scrapy.Spider):
+class UnsplashSpider(Spider):
     name = "UnsplashSpider"
 
     COLOR_GREEN = '\033[92m'
@@ -26,14 +21,18 @@ class UnsplashSpider(scrapy.Spider):
     db_file = "database/picture.db"
     cp_file = "checkpoint/spider"
 
-    def __init__(self):
-        super(UnsplashSpider, self).__init__()
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super(UnsplashSpider, cls).from_crawler(crawler, *args, **kwargs)
+        crawler.signals.connect(spider.spider_closed, signal=signals.spider_closed)
+        return spider
 
+    def __init__(self):
         self.time_begin = datetime.datetime.now()
         self.time_end = None
 
         self.page_begin = 1
-        self.page_end = 2700
+        self.page_end = 6700
         self.page_size = 30
         self.page_step = 30
         self.page_items = {}
@@ -42,13 +41,9 @@ class UnsplashSpider(scrapy.Spider):
         self.initial_page()
         self.initial_table()
 
-        dispatcher.connect(self.spider_closed, signals.spider_closed)
-
     def start_requests(self):
 
-        # use official client_id inside Chrome plugin
-        url_pre = "https://api.unsplash.com/photos/?client_id="
-        client_id = "fa60305aa82e74134cabc7093ef54c8e2c370c47e73152f72371c828daedfcd7"
+        url_pre = "https://unsplash.com/napi/photos?order_by=latest"
         url_page, url_page_size = "&page=", "&per_page=" + str(self.page_size)
 
         conn = sqlite3.connect(self.db_file)
@@ -56,7 +51,7 @@ class UnsplashSpider(scrapy.Spider):
 
         # spider pictures and store them in database
         for page_index in range(self.page_begin, self.page_end + 1):
-            yield scrapy.Request(url=url_pre + client_id + url_page + str(page_index) + url_page_size,
+            yield scrapy.Request(url=url_pre + url_page + str(page_index) + url_page_size,
                                  callback=lambda response, conn=conn, semaphore=semaphore, page_index=page_index:
                                  self.save_data(response, conn, semaphore, page_index))
 
@@ -64,11 +59,12 @@ class UnsplashSpider(scrapy.Spider):
         pass
 
     def save_data(self, response, conn, semaphore, page_index):
+        
         pictures = json.loads(response.body_as_unicode())
         self.page_items[page_index] = len(pictures)
 
-        print "%sSpider page: %4d, pictures: %2d%s" % \
-              (self.COLOR_RED, page_index, len(pictures), self.COLOR_END)
+        print("%sSpider page: %4d, pictures: %2d%s" % \
+              (self.COLOR_RED, page_index, len(pictures), self.COLOR_END))
 
         if pictures:
             for picture in pictures:
@@ -78,13 +74,13 @@ class UnsplashSpider(scrapy.Spider):
                 width = picture["width"]
                 height = picture["height"]
                 color = picture["color"]
-                description = str(picture["description"]).replace('"', "'")
+                description = str(picture["alt_description"]).replace('"', "'")
                 likes = picture["likes"]
                 user_name = str(picture["user"]["name"]).replace('"', "'")
                 url = picture["urls"]["raw"]
                 pre = url.split('/')[-1]
                 pre = pre.split('?')[0]
-                file_name = pre if pre.split(".")[-1] in ["jpg", "png"] else pre + ".jpg"
+                file_name = pre if pre.split(".")[-1] in ["jpg", "png", "JPG", "PNG"] else pre + ".jpg"
 
                 sql = 'insert into picture values ("%s", "%s", "%s", %s, %s, "%s", "%s", %s, "%s", "%s", "%s");' \
                       % (id_str, created_at, updated_at, width, height, color,
@@ -146,8 +142,8 @@ class UnsplashSpider(scrapy.Spider):
 
         self.time_end = datetime.datetime.now()
         seconds = (self.time_end - self.time_begin).total_seconds()
-        hms = "{:0>8}".format(datetime.timedelta(seconds=seconds))
+        hms = str(datetime.timedelta(seconds=seconds))
 
-        print "%sPage: %s -> %s, Checkpoint: %s, Total spider pictures: %s, Total Time: %s%s" % \
+        print("%sPage: %s -> %s, Checkpoint: %s, Total spider pictures: %s, Total Time: %s%s" % \
               (self.COLOR_GREEN, self.page_begin, self.page_end,
-               self.check_point, count, hms, self.COLOR_END)
+               self.check_point, count, hms, self.COLOR_END))

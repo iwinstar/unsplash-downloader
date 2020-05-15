@@ -3,14 +3,17 @@
 # -*- datetime: 2018/09/10 08:10:08 -*-
 
 import sqlite3
-import urllib
 import threadpool
 import os
 import time
 import datetime
 import sys
+
+from urllib import request
+from urllib import error
 from PIL import Image
 
+Image.MAX_IMAGE_PIXELS = 1000000000
 
 class UnsplashDownloader:
     def __init__(self, pictures, folder, threads=10):
@@ -32,20 +35,20 @@ class UnsplashDownloader:
             # check local picture
             if os.path.exists(full_name):
                 local_file_size = int(os.path.getsize(full_name))
-                remote_file_size = int(urllib.urlopen(url).info()['Content-Length'])
+                remote_file_size = int(request.urlopen(url).headers['Content-Length'])
 
                 if remote_file_size == local_file_size:
-                    print 'Downloaded %s' % file_name
+                    print('Downloaded %s' % file_name)
                     return
 
             # download picture
-            print 'Downloading: %s' % file_name
-            urllib.urlretrieve(url, full_name)
+            print('Downloading: %s' % file_name)
+            request.urlretrieve(url, full_name)
+
+            # initialize change_time to picture's upload_time
+            change_time = time.mktime(time.strptime(created_at, '%Y-%m-%d %H:%M:%S'))
 
             try:
-                # initialize change_time to picture's upload_time
-                change_time = time.mktime(time.strptime(created_at, '%Y-%m-%d %H:%M:%S'))
-
                 # get picture's last modified time stored in exif
                 exif = Image.open(full_name)._getexif()
 
@@ -54,12 +57,12 @@ class UnsplashDownloader:
                     # so, here we just modify change_time, known as ctime
                     # more introduction about exif format: http://www.exiv2.org/tags.html
                     change_time = time.mktime(time.strptime(exif.get(306), '%Y:%m:%d %H:%M:%S'))
-
-                os.utime(full_name, (change_time, change_time))
-            except Exception, e:
-                print "%s exception %s" % (file_name, e)
-        except urllib.ContentTooShortError:
-            print 'Network Error, re-download:' + url
+            except Exception as e:
+                print("%s exception %s" % (file_name, e))
+                
+            os.utime(full_name, (change_time, change_time))
+        except error.ContentTooShortError:
+            print('Network Error, re-download: ' + url)
             self.downloader(created_at, file_name, url)
 
 
@@ -98,7 +101,7 @@ if __name__ == "__main__":
         checkpoint = picture[0]
 
     # threads shouldn't be very large
-    pd = UnsplashDownloader(pictures, folder_path, threads=10)
+    pd = UnsplashDownloader(pictures, folder_path, threads=5)
     pd.run()
 
     # record checkpoint
@@ -108,7 +111,7 @@ if __name__ == "__main__":
 
     time_end = datetime.datetime.now()
     seconds = (time_end - time_begin).total_seconds()
-    hms = "{:0>8}".format(datetime.timedelta(seconds=seconds))
+    hms = str(datetime.timedelta(seconds=seconds))
 
-    print "%sCheckpoint: %s, Total download pictures: %s, Total time: %s%s" % \
-          (COLOR_BEGIN, checkpoint, len(pictures), hms, COLOR_END)
+    print("%sCheckpoint: %s, Total download pictures: %s, Total time: %s%s" % \
+          (COLOR_BEGIN, checkpoint, len(pictures), hms, COLOR_END))
