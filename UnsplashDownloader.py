@@ -93,7 +93,7 @@ if __name__ == "__main__":
 
     # get all picture urls
     conn = sqlite3.connect(db_file)
-    cursor = conn.execute("select created_at, file_name, url from picture %s order by created_at asc" % condition)
+    cursor = conn.execute("select distinct created_at, file_name, url from picture %s order by created_at asc" % condition)
 
     pictures = []
     for picture in cursor:

@@ -5,7 +5,7 @@
 ![license](https://img.shields.io/hexpm/l/plug.svg) 
 ![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)
 
-> Until 2020.05.15, Total spider 192607 pictures, 1.43 TiB
+> Until 2020.05.15, Total spider 173419 pictures, 1.43 TiB
 
 ### Introduction
 I love pictures on Unsplash uploaded by photographers worldwide. They are so beautiful and professional. I want to download them to local disk as material library, so here we are.

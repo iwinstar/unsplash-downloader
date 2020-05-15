@@ -135,7 +135,7 @@ class UnsplashSpider(Spider):
 
         # query statistics
         conn = sqlite3.connect(self.db_file)
-        cursor = conn.execute("select count(*) from picture")
+        cursor = conn.execute("select count(distinct id) from picture")
         count = cursor.fetchone()[0]
         cursor.close()
         conn.close()
